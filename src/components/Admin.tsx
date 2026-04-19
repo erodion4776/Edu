@@ -47,6 +47,7 @@ export default function Admin({ onBack }: AdminProps) {
   const [status, setStatus] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [accessCode, setAccessCode] = useState("");
+  const [showTemplateGuide, setShowTemplateGuide] = useState(false);
 
   // New Question Form State
   const [newQuestion, setNewQuestion] = useState<Omit<Question, 'id'>>({
@@ -675,20 +676,88 @@ export default function Admin({ onBack }: AdminProps) {
                           <p className="text-slate-400 font-medium text-xl">Direct memory injection for official documentation.</p>
                        </div>
                        
-                       <div className="relative group">
-                          <input 
-                            type="file" 
-                            accept=".json" 
-                            onChange={handleJsonUpload}
-                            className="absolute inset-0 opacity-0 cursor-pointer z-20"
-                            disabled={isProcessing}
-                          />
-                          <button className="flex items-center gap-4 bg-primary text-white px-12 py-7 rounded-[2.5rem] font-black text-lg shadow-2xl shadow-primary/40 group-hover:scale-105 transition-all">
-                             {isProcessing ? <Loader2 className="w-6 h-6 animate-spin" /> : <PlusCircle className="w-6 h-6" />}
-                             Import Nerve Hub JSON
+                       <div className="flex items-center gap-4">
+                          <button 
+                            onClick={() => setShowTemplateGuide(!showTemplateGuide)}
+                            className="px-8 py-7 glass border-white/10 text-slate-400 rounded-3xl font-black text-sm hover:text-white transition-all"
+                          >
+                             {showTemplateGuide ? 'Close Guide' : 'Format Guide'}
                           </button>
+                          <div className="relative group">
+                             <input 
+                               type="file" 
+                               accept=".json" 
+                               onChange={handleJsonUpload}
+                               className="absolute inset-0 opacity-0 cursor-pointer z-20"
+                               disabled={isProcessing}
+                             />
+                             <button className="flex items-center gap-4 bg-primary text-white px-12 py-7 rounded-[2.5rem] font-black text-lg shadow-2xl shadow-primary/40 group-hover:scale-105 transition-all">
+                                {isProcessing ? <Loader2 className="w-6 h-6 animate-spin" /> : <PlusCircle className="w-6 h-6" />}
+                                Import JSON
+                             </button>
+                          </div>
                        </div>
                     </div>
+
+                    <AnimatePresence>
+                      {showTemplateGuide && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden"
+                        >
+                          {[
+                            {
+                              title: "Past Question",
+                              icon: Database,
+                              color: "text-primary",
+                              json: {
+                                category: "PAST_QUESTION",
+                                subject: "Biology",
+                                examType: "JAMB",
+                                year: "2023",
+                                questions: [
+                                  { q: "Define Cell?", a: "Functional unit of life" }
+                                ]
+                              }
+                            },
+                            {
+                              title: "Syllabus Node",
+                              icon: Bookmark,
+                              color: "text-amber-500",
+                              json: {
+                                category: "SYLLABUS",
+                                subject: "Physics",
+                                examBoard: "WAEC",
+                                topics: ["Waves", "Optics", "Electricity"]
+                              }
+                            },
+                            {
+                              title: "Tutorial Node",
+                              icon: GraduationCap,
+                              color: "text-emerald-500",
+                              json: {
+                                category: "TUTORIAL",
+                                subject: "Chemistry",
+                                title: "Organic 101",
+                                content: "Organic chemistry is..."
+                              }
+                            }
+                          ].map((tmpl, idx) => (
+                            <div key={idx} className="glass p-8 rounded-[2rem] border-white/5 space-y-4">
+                              <div className="flex items-center gap-3">
+                                <tmpl.icon className={cn("w-5 h-5", tmpl.color)} />
+                                <h4 className="font-black text-white text-sm uppercase tracking-widest">{tmpl.title}</h4>
+                              </div>
+                              <pre className="bg-black/40 p-4 rounded-xl text-[10px] text-slate-400 font-mono overflow-x-auto">
+                                {JSON.stringify(tmpl.json, null, 2)}
+                              </pre>
+                            </div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                        <div className="lg:col-span-2 space-y-6">
