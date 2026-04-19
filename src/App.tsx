@@ -26,12 +26,13 @@ import Syllabus from "./components/Syllabus";
 import Challenges from "./components/Challenges";
 
 import Registration from "./components/Registration";
+import Admin from "./components/Admin";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-type View = 'landing' | 'exam-select' | 'subjects' | 'years' | 'quiz' | 'syllabus' | 'challenges' | 'registration';
+type View = 'landing' | 'exam-select' | 'subjects' | 'years' | 'quiz' | 'syllabus' | 'challenges' | 'registration' | 'admin';
 
 export default function App() {
   const [view, setView] = useState<View>('landing');
@@ -468,6 +469,13 @@ export default function App() {
               onSuccess={() => setView('landing')}
             />
           )}
+
+          {view === 'admin' && (
+            <Admin 
+              key="admin"
+              onBack={() => setView('landing')}
+            />
+          )}
         </AnimatePresence>
       </main>
 
@@ -501,6 +509,7 @@ export default function App() {
              © 2026 Edu Arena • <span className="text-primary">Empowering the Next Generation</span>
            </p>
            <div className="flex items-center gap-8">
+              <button onClick={() => setView('admin')} className="text-xs font-black uppercase tracking-widest text-slate-800 hover:text-white transition-colors">Admin</button>
               {['Terms', 'Privacy', 'Support'].map(f => (
                 <button key={f} className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
                   {f}

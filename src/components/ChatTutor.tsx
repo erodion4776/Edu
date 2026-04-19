@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
+import { askTutor } from "../services/geminiService";
+
 interface Message {
   id: string;
   type: 'bot' | 'user';
@@ -54,29 +56,35 @@ export default function ChatTutor({ onClose, onNavigateToQuiz }: ChatTutorProps)
     setInputValue("");
     setIsTyping(true);
 
-    // Mock bot response
-    setTimeout(() => {
-      let botResponse: Partial<Message> = {
+    try {
+      // Map history for Gemini format
+      const history = messages
+        .filter(m => m.id !== '1') // Skip initial greeting for better flow
+        .map(m => ({
+          role: m.type === 'bot' ? 'model' : 'user',
+          parts: [{ text: m.text }]
+        }));
+
+      const responseText = await askTutor(text, history);
+
+      const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
-        text: "That's a great topic! Based on current trends, students often struggle with genetics and ecology in JAMB Biology. Would you like to practice some 2016 Biology questions together?",
-        suggestions: [
-          { text: "Yes, start 2016 session", action: () => onNavigateToQuiz('JAMB') },
-          { text: "Explain Genetics first", action: () => handleSend("Explain Mendel's laws") }
-        ]
+        text: responseText || "I'm having trouble thinking clearly. Please try your request again.",
+        suggestions: responseText?.toLowerCase().includes("practice") || responseText?.toLowerCase().includes("quiz") 
+          ? [
+              { text: "Start Practice Arena", action: () => onNavigateToQuiz() },
+              { text: "Ask another question", action: () => {} }
+            ]
+          : undefined
       };
 
-      if (text.toLowerCase().includes("syllabus")) {
-        botResponse.text = "I have the full 2024 JAMB Syllabus for all major subjects. You can access it in the 'Syllabus' tab, or I can summarize a specific subject for you right here.";
-        botResponse.suggestions = [
-            { text: "Summarize Biology", action: () => handleSend("What's in the Biology syllabus?") },
-            { text: "View all Syllabi", action: () => {} }
-        ];
-      }
-
-      setMessages(prev => [...prev, botResponse as Message]);
+      setMessages(prev => [...prev, botMsg]);
+    } catch (err) {
+      console.error(err);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (
