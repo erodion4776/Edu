@@ -118,16 +118,16 @@ export default function App() {
     <div className="min-h-screen bg-transparent font-sans selection:bg-primary/20">
       {/* Navbar */}
       <nav className="glass border-b border-white/5 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4 cursor-pointer group" onClick={() => setView('landing')}>
-            <div className="bg-primary p-2.5 rounded-[1rem] shadow-lg shadow-primary/20 group-hover:rotate-6 transition-transform">
-              <GraduationCap className="text-white w-6 h-6" />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3 sm:gap-4 cursor-pointer group" onClick={() => setView('landing')}>
+            <div className="bg-primary p-2 rounded-[0.8rem] sm:p-2.5 sm:rounded-[1rem] shadow-lg shadow-primary/20 group-hover:rotate-6 transition-transform">
+              <GraduationCap className="text-white w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h1 className="font-black text-2xl tracking-tight text-white group-hover:text-primary transition-colors">Edu Arena</h1>
+              <h1 className="font-black text-lg sm:text-2xl tracking-tight text-white group-hover:text-primary transition-colors">Edu Arena</h1>
               <div className="flex items-center gap-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Platform Online</span>
+                <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-slate-500 line-clamp-1">Platform Online</span>
               </div>
             </div>
           </div>
@@ -152,7 +152,7 @@ export default function App() {
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto px-6 py-12">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <AnimatePresence mode="wait">
           {view === 'landing' && (
             <LandingPage 
@@ -326,42 +326,44 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="glass-card rounded-[4rem] border-white/5 shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] p-10 md:p-20 space-y-16 overflow-hidden relative">
+              <div className="glass-card rounded-[2rem] sm:rounded-[4rem] border-white/5 shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] p-5 sm:p-10 md:p-20 space-y-8 sm:space-y-16 overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-12 scale-[2] opacity-5 pointer-events-none">
                    <Zap className="w-64 h-64 text-primary fill-current rotate-12" />
                 </div>
 
-                <div className="flex flex-col sm:flex-row justify-between items-start gap-8 relative z-10">
-                   <div className="flex flex-wrap items-center gap-4">
-                      <span className="bg-white/10 text-white px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border border-white/5">{currentQuestion.examType}</span>
-                      <span className="bg-primary/20 text-primary px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border border-primary/20">{currentQuestion.subject}</span>
-                      <span className="glass text-slate-500 px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border-white/5">YEAR {currentQuestion.year}</span>
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-8 relative z-10 w-full">
+                   <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+                      <span className="bg-white/10 text-white px-3 py-1 sm:px-5 sm:py-2 rounded-xl sm:rounded-2xl text-[8px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] border border-white/5">{currentQuestion.examType}</span>
+                      <span className="bg-primary/20 text-primary px-3 py-1 sm:px-5 sm:py-2 rounded-xl sm:rounded-2xl text-[8px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] border border-primary/20">{currentQuestion.subject}</span>
+                      <span className="glass text-slate-500 px-3 py-1 sm:px-5 sm:py-2 rounded-xl sm:rounded-2xl text-[8px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] border-white/5">YEAR {currentQuestion.year}</span>
                    </div>
-                   <div className="glass px-8 py-3.5 rounded-[1.5rem] flex items-center gap-4 border-white/5 shadow-2xl">
-                      <Clock className="w-5 h-5 text-primary" />
-                      <span className="text-white font-black text-lg tabular-nums tracking-tighter">00:00:00</span>
-                      <div className="w-px h-5 bg-white/10" />
-                      <span className="text-slate-500 text-sm font-black uppercase tracking-widest">Q{currentQuestionIndex + 1} / {quizQuestions.length}</span>
+                   <div className="glass px-4 py-2 sm:px-8 sm:py-3.5 rounded-xl sm:rounded-[1.5rem] flex items-center gap-3 sm:gap-4 border-white/5 shadow-2xl w-full sm:w-auto justify-between sm:justify-start">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                        <span className="text-white font-black text-base sm:text-lg tabular-nums tracking-tighter">00:00:00</span>
+                      </div>
+                      <div className="w-px h-4 sm:h-5 bg-white/10" />
+                      <span className="text-slate-500 text-[10px] sm:text-sm font-black uppercase tracking-widest shrink-0">Q{currentQuestionIndex + 1} / {quizQuestions.length}</span>
                    </div>
                 </div>
 
-                <div className="space-y-12 relative z-10">
+                <div className="space-y-6 sm:space-y-12 relative z-10 w-full text-center">
                   {currentQuestion.image && (
-                    <div className="glass p-6 rounded-[3rem] border-white/5 overflow-hidden max-h-96 flex justify-center shadow-2xl">
+                    <div className="glass p-3 sm:p-6 rounded-2xl sm:rounded-[3rem] border-white/5 overflow-hidden max-h-60 sm:max-h-96 flex justify-center shadow-2xl mx-auto">
                       <img 
                         src={currentQuestion.image} 
                         alt="Question Material" 
-                        className="object-contain h-full shadow-2xl rounded-2xl"
+                        className="object-contain h-full shadow-2xl rounded-xl"
                         referrerPolicy="no-referrer"
                       />
                     </div>
                   )}
-                  <h3 className="text-3xl md:text-5xl font-black text-white leading-[1.2] text-center max-w-5xl mx-auto tracking-tighter">
+                  <h3 className="text-xl sm:text-3xl md:text-5xl font-black text-white leading-tight sm:leading-[1.2] max-w-5xl mx-auto tracking-tight sm:tracking-tighter">
                     {currentQuestion.questionText}
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 relative z-10 w-full">
                   {currentQuestion.options.map((option, idx) => {
                     const isSelected = selectedOption === idx;
                     const isCorrect = idx === currentQuestion.correctAnswer;
@@ -374,9 +376,9 @@ export default function App() {
                         onClick={() => handleOptionClick(idx)}
                         disabled={selectedOption !== null}
                         className={cn(
-                          "relative w-full p-8 rounded-[2.5rem] border-2 text-left font-black transition-all flex items-center gap-8 group py-10",
+                          "relative w-full p-4 sm:p-8 rounded-2xl sm:rounded-[2.5rem] border-2 text-left font-black transition-all flex items-center gap-4 sm:gap-8 group py-6 sm:py-10",
                           selectedOption === null 
-                            ? "glass border-white/5 hover:border-primary/50 hover:scale-[1.02] hover:bg-white/10 shadow-2xl"
+                            ? "glass border-white/5 hover:border-primary/50 hover:scale-[1.01] hover:bg-white/10 shadow-xl"
                             : showSuccess 
                               ? "bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-[0_0_50px_rgba(16,185,129,0.2)] ring-4 ring-emerald-500/10" 
                               : showFailure 
@@ -387,22 +389,22 @@ export default function App() {
                         )}
                       >
                         <div className={cn(
-                          "w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 font-black text-2xl transition-all shadow-inner",
+                          "w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 font-black text-lg sm:text-2xl transition-all shadow-inner",
                           selectedOption === null 
-                            ? "glass text-slate-500 group-hover:bg-primary group-hover:text-white group-hover:rotate-6 group-hover:scale-110"
+                            ? "glass text-slate-500 group-hover:bg-primary group-hover:text-white group-hover:rotate-6 sm:group-hover:scale-110"
                             : showSuccess 
-                              ? "bg-emerald-500 text-white rotate-12 scale-125 shadow-[0_0_20px_rgba(16,185,129,0.5)]" 
+                              ? "bg-emerald-500 text-white rotate-6 sm:rotate-12 scale-110 sm:scale-125 shadow-[0_0_20px_rgba(16,185,129,0.5)]" 
                               : showFailure 
-                                ? "bg-rose-500 text-white -rotate-12 scale-110 shadow-[0_0_20px_rgba(244,63,94,0.5)]"
+                                ? "bg-rose-500 text-white -rotate-6 sm:-rotate-12 scale-105 sm:scale-110 shadow-[0_0_20px_rgba(244,63,94,0.5)]"
                                 : isCorrect && selectedOption !== null
                                   ? "bg-emerald-500/40 text-emerald-100"
                                   : "glass text-slate-600"
                         )}>
                           {String.fromCharCode(65 + idx)}
                         </div>
-                        <span className="flex-1 text-xl leading-tight tracking-tight">{option}</span>
-                        {selectedOption !== null && isCorrect && <CheckCircle2 className="w-8 h-8 text-emerald-400" />}
-                        {showFailure && <XCircle className="w-8 h-8 text-rose-400" />}
+                        <span className="flex-1 text-base sm:text-xl leading-tight tracking-tight">{option}</span>
+                        {selectedOption !== null && isCorrect && <CheckCircle2 className="w-5 h-5 sm:w-8 sm:h-8 text-emerald-400" />}
+                        {showFailure && <XCircle className="w-5 h-5 sm:w-8 sm:h-8 text-rose-400" />}
                       </button>
                     );
                   })}
