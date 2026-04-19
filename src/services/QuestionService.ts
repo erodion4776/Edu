@@ -1,19 +1,11 @@
-// BrainService.ts - Manages the local "Knowledge Base" (The Brain) using IndexedDB
-// This allows the site to store extracted PDF text without a backend.
+// QuestionService.ts - Manages manually entered questions in IndexedDB
+import { mockQuestions, Question } from '../data/mockQuestions';
 
-const DB_NAME = 'EduArenaBrain';
-const STORE_NAME = 'knowledge';
+const DB_NAME = 'EduArenaQuestions';
+const STORE_NAME = 'questions';
 const DB_VERSION = 1;
 
-interface Knowledge {
-  id: string;
-  fileName: string;
-  category?: string;
-  text: string;
-  timestamp: number;
-}
-
-export class BrainService {
+export class QuestionService {
   private static db: IDBDatabase | null = null;
 
   private static async getDB(): Promise<IDBDatabase> {
@@ -40,30 +32,24 @@ export class BrainService {
     });
   }
 
-  static async addKnowledge(fileName: string, text: string, category?: string): Promise<string> {
+  static async addQuestion(question: Omit<Question, 'id'>): Promise<string> {
     const db = await this.getDB();
-    const id = crypto.randomUUID();
-    const knowledge: Knowledge = {
-      id,
-      fileName,
-      category,
-      text,
-      timestamp: Date.now()
-    };
+    const id = Date.now().toString(); // Use timestamp as simple ID
+    const newQuestion: Question = { ...question, id };
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readwrite');
       const store = transaction.objectStore(STORE_NAME);
-      const request = store.add(knowledge);
+      const request = store.add(newQuestion);
 
       request.onsuccess = () => resolve(id);
       request.onerror = () => reject(request.error);
     });
   }
 
-  static async getAllKnowledge(): Promise<Knowledge[]> {
+  static async getAllQuestions(): Promise<Question[]> {
     const db = await this.getDB();
-    return new Promise((resolve, reject) => {
+    const userQuestions: Question[] = await new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readonly');
       const store = transaction.objectStore(STORE_NAME);
       const request = store.getAll();
@@ -71,9 +57,12 @@ export class BrainService {
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
+
+    // Combine with mock questions for the full state (if desired)
+    return [...mockQuestions, ...userQuestions];
   }
 
-  static async deleteKnowledge(id: string): Promise<void> {
+  static async deleteQuestion(id: string): Promise<void> {
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readwrite');
@@ -83,18 +72,5 @@ export class BrainService {
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
-  }
-
-  static async getContext(query: string): Promise<string> {
-    const all = await this.getAllKnowledge();
-    if (all.length === 0) return "";
-
-    // Simple keyword extraction/matching for context
-    // In a real RAG system, this would use embeddings.
-    const combinedText = all.map(k => `--- Source: ${k.fileName} [CATEGORY: ${k.category || 'GENERAL'}] ---\n${k.text}`).join('\n\n');
-    
-    // For now, return the most relevant snippets or the whole thing if it's small
-    // Gemini 1.5/2.5/3 Pro have 1M+ token windows, so we can send quite a lot.
-    return combinedText;
   }
 }

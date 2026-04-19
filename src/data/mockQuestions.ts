@@ -8,6 +8,7 @@ export interface Question {
   options: string[];
   correctAnswer: number; // Index 0-3
   staticExplanation: string;
+  topic?: string;
 }
 
 export const mockQuestions: Question[] = [

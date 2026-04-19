@@ -21,6 +21,11 @@ STYLE GUIDELINES:
 3. Suggest relevant past questions if the student seems stuck.
 4. If a question is too complex, break it down into smaller steps.
 5. Use Nigerian academic terminology (e.g., "SS3", "Post-UTME", "Curriculum").
+
+DATA INTERPRETATION:
+- If context is [CATEGORY: SYLLABUS]: Treat this as the absolute legal requirement for the exam.
+- If context is [CATEGORY: PAST_QUESTION]: Use this for practice, showing the year and exact question wording.
+- If context is [CATEGORY: TUTORIAL]: Treat this as simplified teaching material for SS1-SS3 students.
 `;
 
 export async function askTutor(query: string, chatHistory: any[] = []) {
@@ -50,5 +55,36 @@ export async function askTutor(query: string, chatHistory: any[] = []) {
   } catch (error) {
     console.error("Gemini Error:", error);
     return "I'm having a slight neural glitch connecting to the Arena servers. Please try again or check your internet connection.";
+  }
+}
+
+export async function validateQuestion(questionText: string, options: string[], correctAnswer: string, explanation: string) {
+  const prompt = `
+    Please review the following academic question and explanation for style and accuracy.
+    You must respond in the "Nigerian Tutor" style (encouraging, high-energy, using Nigerian academic terms).
+    
+    QUESTION: ${questionText}
+    OPTIONS: A) ${options[0]}, B) ${options[1]}, C) ${options[2]}, D) ${options[3]}
+    CORRECT ANSWER: ${correctAnswer}
+    EXPLANATION: ${explanation}
+    
+    If the question is good, say "ACED IT! This is a perfect Arena challenge." then provide a brief pedagogical tip.
+    If it needs improvement, explain why in a helpful, coaching way.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        temperature: 0.9,
+      }
+    });
+
+    return response.text;
+  } catch (error) {
+    console.error("Gemini Review Error:", error);
+    return "The AI Reviewer is currently offline. Please manually check the content.";
   }
 }
