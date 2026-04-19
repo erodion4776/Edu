@@ -105,9 +105,31 @@ export default function Admin({ onBack }: AdminProps) {
         ? jsonData 
         : JSON.stringify(jsonData, null, 2);
 
+      // Store in Neural Brain
       await BrainService.addKnowledge(file.name, processedText, category);
+
+      // If it's a Past Question package, also populate the Question Bank
+      if (category === "PAST_QUESTION" && Array.isArray(jsonData.questions)) {
+        setStatus("Syncing with Question Bank...");
+        for (const q of jsonData.questions) {
+          await QuestionService.addQuestion({
+            examType: (jsonData.examType || "JAMB") as any,
+            subject: jsonData.subject || "General",
+            year: jsonData.year || "2024",
+            questionText: q.q || q.questionText,
+            options: q.options || q.o || ["", "", "", ""],
+            correctAnswer: typeof q.correctAnswer === 'number' ? q.correctAnswer : 0,
+            staticExplanation: q.explanation || q.a || "",
+            topic: q.topic || "General",
+            image: ""
+          });
+        }
+        await loadQuestions();
+      }
+
       await loadKnowledge();
-      setStatus(null);
+      setStatus("Neural Data Synchronized Successfully!");
+      setTimeout(() => setStatus(null), 3000);
     } catch (err: any) {
       setError("Failed to parse JSON. Check format.");
     } finally {
@@ -718,7 +740,12 @@ export default function Admin({ onBack }: AdminProps) {
                                 examType: "JAMB",
                                 year: "2023",
                                 questions: [
-                                  { q: "Define Cell?", a: "Functional unit of life" }
+                                  { 
+                                    questionText: "Which is the powerhouse of the cell?",
+                                    options: ["Nucleus", "Ribosome", "Mitochondria", "Vacuole"],
+                                    correctAnswer: 2,
+                                    explanation: "Mitochondria produces ATP..."
+                                  }
                                 ]
                               }
                             },
