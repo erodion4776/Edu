@@ -10,17 +10,12 @@ import {
   FileText,
   ShieldAlert,
   Save,
-  Rocket
+  Rocket,
+  Download
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { BrainService } from "../services/BrainService";
-import * as pdfjsLib from "pdfjs-dist";
 import { cn } from "../lib/utils";
-
-// Initialize PDF.js worker
-// We use a specific version that matches the installed package if possible, 
-// but for simplicity in a sandboxed environment, a reliable CDN version works best.
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.mjs`;
 
 interface AdminProps {
   onBack: () => void;
@@ -47,35 +42,34 @@ export default function Admin({ onBack }: AdminProps) {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.type !== "application/pdf") {
-      setError("Only PDF files are supported for AI feeding.");
+    if (file.type !== "application/json" && !file.name.endsWith('.json')) {
+      setError("Only JSON files are supported for AI feeding.");
       return;
     }
 
     setIsProcessing(true);
     setError(null);
-    setStatus("Reading PDF Structure...");
+    setStatus("Reading JSON Data...");
 
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const text = await file.text();
+      const jsonData = JSON.parse(text);
       
-      let fullText = "";
-      for (let i = 1; i <= pdf.numPages; i++) {
-        setStatus(`Extracting Page ${i} of ${pdf.numPages}...`);
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items.map((item: any) => item.str).join(" ");
-        fullText += pageText + "\n";
-      }
+      setStatus("Validating & Polishing for AI...");
+      
+      // We expect JSON to be either a string, an array of strings, 
+      // or an object with specific fields. 
+      // We'll flatten it to a string for the BrainService.
+      const processedText = typeof jsonData === 'string' 
+        ? jsonData 
+        : JSON.stringify(jsonData, null, 2);
 
-      setStatus("Polishing Data for AI...");
-      await BrainService.addKnowledge(file.name, fullText);
+      await BrainService.addKnowledge(file.name, processedText);
       await loadKnowledge();
       setStatus(null);
     } catch (err: any) {
       console.error(err);
-      setError("Failed to extract text from PDF. Ensure the file is not encrypted.");
+      setError("Failed to parse JSON. Please check the file format.");
     } finally {
       setIsProcessing(false);
       if (event.target) event.target.value = "";
@@ -160,14 +154,14 @@ export default function Admin({ onBack }: AdminProps) {
           <div className="relative group">
             <input 
               type="file" 
-              accept=".pdf" 
+              accept=".json" 
               onChange={handleFileUpload}
               className="absolute inset-0 opacity-0 cursor-pointer z-20"
               disabled={isProcessing}
             />
             <button className="flex items-center gap-4 bg-primary text-white px-10 py-6 rounded-[2rem] font-black text-lg shadow-2xl shadow-primary/40 group-hover:scale-105 transition-all">
-               {isProcessing ? <Loader2 className="w-6 h-6 animate-spin" /> : <FileUp className="w-6 h-6" />}
-               Upload Exam PDF
+               {isProcessing ? <Loader2 className="w-6 h-6 animate-spin" /> : <Download className="w-6 h-6" />}
+               Import JSON Data
             </button>
           </div>
        </div>
@@ -207,7 +201,7 @@ export default function Admin({ onBack }: AdminProps) {
                      <div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto text-slate-700">
                         <Brain className="w-10 h-10" />
                      </div>
-                     <p className="text-slate-500 font-bold max-w-xs mx-auto italic">Your AI's brain is empty. Upload official exam PDFs to start building the intelligence layer.</p>
+                     <p className="text-slate-500 font-bold max-w-xs mx-auto italic">Your AI's brain is empty. Import official exam JSON data to start building the intelligence layer.</p>
                   </div>
                 ) : (
                   knowledgeList.map((k) => (

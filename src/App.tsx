@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { 
   BookOpen, 
   ChevronLeft, 
@@ -43,6 +43,20 @@ export default function App() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
+
+  useEffect(() => {
+    // Hidden route detection
+    const handleHashChange = () => {
+      if (window.location.hash === '#/arena-admin') {
+        setView('admin');
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange(); // Check on mount
+
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Filtered lists
   const availableSubjects = useMemo(() => {
@@ -509,7 +523,6 @@ export default function App() {
              © 2026 Edu Arena • <span className="text-primary">Empowering the Next Generation</span>
            </p>
            <div className="flex items-center gap-8">
-              <button onClick={() => setView('admin')} className="text-xs font-black uppercase tracking-widest text-slate-800 hover:text-white transition-colors">Admin</button>
               {['Terms', 'Privacy', 'Support'].map(f => (
                 <button key={f} className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
                   {f}
