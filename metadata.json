@@ -1,6 +1,6 @@
 {
-  "name": "JAMB/WAEC/NECO Past Questions Hub",
-  "description": "A robust educational platform for storing, OCR-processing, and accessing JAMB, WAEC, and NECO past questions with AI-powered extraction.",
+  "name": "Edu Arena",
+  "description": "A premium educational platform offering past questions, AI-powered tutorials, comprehensive syllabi, and inter-school challenges to empower students.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }
