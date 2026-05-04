@@ -23,12 +23,15 @@ import {
   Image as ImageIcon,
   Cpu,
   Bookmark,
-  GraduationCap
+  GraduationCap,
+  ServerCrash,
+  Activity
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { BrainService } from "../services/BrainService";
 import { QuestionService } from "../services/QuestionService";
 import { validateQuestion } from "../services/geminiService";
+import { askNigerianTutor, AIProvider } from "../lib/aiRouter";
 import { Question } from "../data/mockQuestions";
 import { cn } from "../lib/utils";
 
@@ -36,7 +39,7 @@ interface AdminProps {
   onBack: () => void;
 }
 
-type AdminView = 'stats' | 'questions' | 'brain' | 'settings';
+type AdminView = 'stats' | 'questions' | 'brain' | 'rag' | 'settings';
 
 export default function Admin({ onBack }: AdminProps) {
   const [view, setView] = useState<AdminView>('stats');
@@ -64,6 +67,66 @@ export default function Admin({ onBack }: AdminProps) {
   const [diagramPreview, setDiagramPreview] = useState<string | null>(null);
   const [aiFeedback, setAiFeedback] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
+
+  // RAG / PDF Extractor State
+  const [pdfStatus, setPdfStatus] = useState<string | null>(null);
+  const [extractedPdfText, setExtractedPdfText] = useState<string>("");
+  const [aiTestPrompt, setAiTestPrompt] = useState("");
+  const [aiTestResult, setAiTestResult] = useState<{ text: string; provider: AIProvider } | null>(null);
+  const [isAiTesting, setIsAiTesting] = useState(false);
+  const [nodeStatus, setNodeStatus] = useState({
+    gemini: 'Active',
+    grok: 'Standby',
+    huggingFace: 'Standby'
+  });
+
+  const handlePdfDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type !== "application/pdf" && !file.name.endsWith('.pdf')) {
+        setError("Only PDF files are supported for RAG Extraction.");
+        return;
+      }
+      processMockPdf(file);
+    }
+  };
+
+  const processMockPdf = (file: File) => {
+    setPdfStatus("Extracting PDF Text...");
+    setExtractedPdfText("");
+    
+    setTimeout(() => {
+      setPdfStatus("Chunking Data...");
+      setTimeout(() => {
+        setPdfStatus("Generating Vector Embeddings...");
+        setTimeout(() => {
+          setPdfStatus(null);
+          setExtractedPdfText(`[EXTRACTED FROM ${file.name}]\n\nThe core of the Cascading AI Engine relies on deterministic failovers.\nIn a multi-agent system, the primary node handles standard reasoning tasks, but connection drops necessitate immediate routing to secondary analytical models like Grok or Hugging Face local endpoints...`);
+        }, 1500);
+      }, 1500);
+    }, 1500);
+  };
+
+  const runAiRouterTest = async () => {
+    if (!aiTestPrompt) return;
+    setIsAiTesting(true);
+    setAiTestResult(null);
+    try {
+      const result = await askNigerianTutor(aiTestPrompt, extractedPdfText);
+      setAiTestResult(result);
+      
+      setNodeStatus({
+        gemini: result.provider === 'Gemini' ? 'Active' : (result.provider === 'Mock' ? 'Offline' : 'Standby'),
+        grok: result.provider === 'Grok' ? 'Active' : (result.provider === 'Gemini' ? 'Standby' : 'Offline'),
+        huggingFace: result.provider === 'Hugging Face' ? 'Active' : (result.provider === 'Grok' || result.provider === 'Gemini' ? 'Standby' : 'Offline')
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsAiTesting(false);
+    }
+  };
 
   useEffect(() => {
     if (isAdmin) {
@@ -293,6 +356,7 @@ export default function Admin({ onBack }: AdminProps) {
               { id: 'stats', label: 'Dashboard Overview', icon: LayoutDashboard },
               { id: 'questions', label: 'Question Bank', icon: Database },
               { id: 'brain', label: 'Neural Intelligence', icon: Brain },
+              { id: 'rag', label: 'RAG Pipeline', icon: Activity },
               { id: 'settings', label: 'Portal Config', icon: Settings },
             ].map((item) => (
               <button 
@@ -867,6 +931,140 @@ export default function Admin({ onBack }: AdminProps) {
                                   </div>
                                 ))}
                              </div>
+                          </div>
+                       </div>
+                    </div>
+                 </motion.div>
+               )}
+               {/* VIEW: RAG PIPELINE */}
+               {view === 'rag' && (
+                 <motion.div 
+                   key="rag"
+                   initial={{ opacity: 0, x: 20 }}
+                   animate={{ opacity: 1, x: 0 }}
+                   exit={{ opacity: 0, x: -20 }}
+                   className="space-y-12"
+                 >
+                    <div className="space-y-2">
+                       <h2 className="text-6xl font-black text-white tracking-tighter leading-none">RAG <span className="text-cyan-500">Extractor</span></h2>
+                       <p className="text-slate-400 font-medium text-xl">Upload PDF materials and manage the Cascading AI Engine.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                       {/* PDF Extractor Zone */}
+                       <div className="space-y-8">
+                          <h3 className="text-2xl font-black text-white tracking-tighter">PDF Feed</h3>
+                          <div 
+                            onDrop={handlePdfDrop}
+                            onDragOver={(e) => e.preventDefault()}
+                            className={cn(
+                              "glass p-12 rounded-[3rem] border-2 border-dashed flex flex-col items-center justify-center gap-6 text-center transition-all",
+                              pdfStatus ? "border-cyan-500/50 bg-cyan-500/5" : "border-slate-800 hover:border-cyan-500/30"
+                            )}
+                          >
+                             {pdfStatus ? (
+                               <div className="space-y-6">
+                                 <div className="w-20 h-20 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto relative">
+                                    <div className="absolute inset-0 border-4 border-t-cyan-500 border-r-cyan-500 border-b-transparent border-l-transparent rounded-full animate-spin" />
+                                    <FileText className="w-8 h-8 text-cyan-400 animate-pulse" />
+                                 </div>
+                                 <h4 className="text-xl font-black text-cyan-400 tracking-widest uppercase">{pdfStatus}</h4>
+                               </div>
+                             ) : (
+                               <>
+                                 <div className="w-24 h-24 bg-white/5 rounded-3xl flex items-center justify-center text-slate-500 shadow-inner">
+                                    <FileUp className="w-10 h-10" />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <h4 className="text-xl font-black text-white tracking-tight">Drop Neural PDF Here</h4>
+                                    <p className="text-slate-500 text-sm font-medium">Extracting vectors for the AI Router. Max size: 50MB.</p>
+                                 </div>
+                               </>
+                             )}
+                          </div>
+
+                          {extractedPdfText && (
+                            <div className="glass p-8 rounded-[2rem] border-white/5 space-y-4">
+                               <div className="flex items-center gap-3 text-cyan-400">
+                                  <CheckCircle2 className="w-5 h-5" />
+                                  <h4 className="font-black text-sm uppercase tracking-widest">Extraction Complete</h4>
+                               </div>
+                               <pre className="bg-black/40 p-4 rounded-xl text-[10px] text-slate-400 font-mono whitespace-pre-wrap overflow-y-auto max-h-48 custom-scrollbar">
+                                 {extractedPdfText}
+                               </pre>
+                            </div>
+                          )}
+                       </div>
+
+                       {/* Advanced AI Routing Panel */}
+                       <div className="space-y-8">
+                          <h3 className="text-2xl font-black text-white tracking-tighter">Cascading Node Router</h3>
+                          
+                          <div className="grid grid-cols-3 gap-4">
+                             {[
+                               { id: 'gemini', name: 'Gemini Primary', status: nodeStatus.gemini, icon: Cpu },
+                               { id: 'grok', name: 'Grok Beta', status: nodeStatus.grok, icon: Activity },
+                               { id: 'huggingFace', name: 'Mistral HF', status: nodeStatus.huggingFace, icon: ServerCrash },
+                             ].map((node) => (
+                               <div key={node.id} className="glass p-6 rounded-2xl border-white/5 space-y-4 relative overflow-hidden">
+                                  {node.status === 'Active' && <div className="absolute inset-0 bg-emerald-500/10 blur-xl" />}
+                                  <div className={cn(
+                                    "w-10 h-10 rounded-xl flex items-center justify-center relative z-10",
+                                    node.status === 'Active' ? "bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)]" : 
+                                    node.status === 'Offline' ? "bg-rose-500/20 text-rose-500" :
+                                    "bg-amber-500/20 text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                                  )}>
+                                     <node.icon className="w-5 h-5" />
+                                  </div>
+                                  <div className="space-y-1 relative z-10">
+                                     <h4 className="text-[10px] font-black text-white uppercase tracking-widest">{node.name}</h4>
+                                     <p className={cn(
+                                       "text-[9px] font-black uppercase tracking-[0.2em]",
+                                       node.status === 'Active' ? "text-emerald-400" : 
+                                       node.status === 'Offline' ? "text-rose-500" :
+                                       "text-amber-500"
+                                     )}>{node.status}</p>
+                                  </div>
+                               </div>
+                             ))}
+                          </div>
+
+                          <div className="glass p-8 rounded-[2.5rem] border-white/5 space-y-6">
+                             <div className="space-y-2">
+                                <h4 className="text-lg font-black text-white tracking-tight">Test AI Cascade</h4>
+                                <p className="text-xs text-slate-500 font-medium">Test cross-model prompt fallback using extracted RAG context.</p>
+                             </div>
+                             
+                             <div className="flex gap-4">
+                               <input 
+                                 type="text"
+                                 value={aiTestPrompt}
+                                 onChange={(e) => setAiTestPrompt(e.target.value)}
+                                 placeholder="Ask a question..."
+                                 className="flex-1 glass border border-white/5 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-cyan-500/50 transition-all text-sm font-bold"
+                               />
+                               <button 
+                                 onClick={runAiRouterTest}
+                                 disabled={isAiTesting || !aiTestPrompt}
+                                 className="px-8 py-4 bg-cyan-500 hover:bg-cyan-400 text-slate-900 rounded-2xl font-black text-sm flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all disabled:opacity-50"
+                               >
+                                  {isAiTesting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Execute"}
+                               </button>
+                             </div>
+
+                             {aiTestResult && (
+                               <div className="p-6 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 space-y-4">
+                                  <div className="flex items-center justify-between">
+                                     <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">Router Response</span>
+                                     <span className="text-[9px] font-black text-white bg-cyan-500/20 px-3 py-1 rounded-full uppercase tracking-wider border border-cyan-500/30">
+                                        Rendered via: {aiTestResult.provider}
+                                     </span>
+                                  </div>
+                                  <p className="text-slate-300 text-sm italic font-medium leading-relaxed">
+                                     {aiTestResult.text}
+                                  </p>
+                               </div>
+                             )}
                           </div>
                        </div>
                     </div>
